@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronLeft, Home, Package, Heart, ShoppingCart, Settings, LogOut, Menu, MessageCircle, Phone, LayoutDashboard } from 'lucide-react';
+import { ChevronLeft, Home, Package, Heart, ShoppingCart, Settings, LogOut, Menu, MessageCircle, Phone, LayoutDashboard, ClipboardList } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 import { useSidebar } from '@/components/providers/SidebarProvider';
@@ -39,6 +39,9 @@ export function Sidebar({ onClose }: SidebarProps) {
     { icon: Package, label: 'Products', href: '/products' },
     { icon: Heart, label: 'Wishlist', href: '/wishlist' },
     { icon: ShoppingCart, label: 'Cart', href: '/cart' },
+    ...(user
+      ? [{ icon: ClipboardList, label: 'My Orders', href: '/orders' }]
+      : []),
     { icon: Phone, label: 'Contact Us', href: 'https://wa.me/923187055975', external: true },
   ];
 

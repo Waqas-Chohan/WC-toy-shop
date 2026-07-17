@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Star, ShoppingCart } from 'lucide-react';
@@ -16,8 +16,13 @@ export default function ProductDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = require('next').use(params);
-  const { products } = useProductStore();
+  const { slug } = React.use(params);
+  const { products, fetchProducts } = useProductStore();
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   const product = products.find(p => p.slug === slug);
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore(state => state.addItem);

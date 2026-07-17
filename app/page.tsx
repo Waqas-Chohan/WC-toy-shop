@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { HeroCarousel } from '@/components/hero/HeroCarousel';
 import { ProductCard } from '@/components/product/ProductCard';
 import Link from 'next/link';
@@ -8,7 +9,13 @@ import { AnimatedSphere } from '@/components/ui/AnimatedSphere';
 import { useProductStore } from '@/stores/productStore';
 
 export default function Page() {
-  const { products } = useProductStore();
+  const { products, fetchProducts, fetchSlides } = useProductStore();
+
+  useEffect(() => {
+    fetchProducts();
+    fetchSlides();
+  }, [fetchProducts, fetchSlides]);
+
   return (
     <>
       {/* Hero Carousel */}

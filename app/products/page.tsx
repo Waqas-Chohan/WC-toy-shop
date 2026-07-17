@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,11 @@ import { useProductStore } from '@/stores/productStore';
 export default function ProductsPage() {
   const [sortBy, setSortBy] = useState('featured');
   const [priceRange, setPriceRange] = useState([0, 150]);
-  const { products } = useProductStore();
+  const { products, fetchProducts } = useProductStore();
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const filteredProducts = products
     .filter(p => p.price >= priceRange[0] && p.price <= priceRange[1])

@@ -25,6 +25,7 @@ export type Section =
   | "pipeline"
   | "deals"
   | "customers"
+  | "orders"
   | "team"
   | "forecasting"
   | "reports"
@@ -46,6 +47,7 @@ const navItems: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: "pipeline", label: "Pipeline", icon: GitBranch },
   { id: "deals", label: "Deals", icon: Handshake },
   { id: "customers", label: "Customers", icon: Building2 },
+  { id: "orders", label: "Orders", icon: CircleDollarSign },
   { id: "team", label: "Team", icon: Users },
   { id: "forecasting", label: "Forecasting", icon: TrendingUp },
   { id: "reports", label: "Reports", icon: BarChart3 },

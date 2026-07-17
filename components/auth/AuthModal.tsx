@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Mail, Lock, User } from 'lucide-react';
+import { X, Mail, Lock, User, LogIn } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 
@@ -17,7 +17,7 @@ export function AuthModal({ isOpen, onClose, mode = 'login' }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const { login, signup, isLoading } = useAuthStore();
+  const { login, signup, googleLogin, isLoading } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,13 +144,35 @@ export function AuthModal({ isOpen, onClose, mode = 'login' }: AuthModalProps) {
           </button>
         </form>
 
-        {(!isAdminLogin || authMode === 'register') && (
+        {(authMode === 'login' || authMode === 'register') && (
           <>
             <div className="mt-6 flex items-center gap-2">
               <div className="flex-1 h-px bg-slate-600/50"></div>
               <span className="text-sm text-slate-400">Or</span>
               <div className="flex-1 h-px bg-slate-600/50"></div>
             </div>
+
+            {isAdminLogin && authMode === 'login' && (
+              <p className="mt-3 text-sm text-slate-400">
+                If this admin email was created through Google, please use the Google button below instead of entering a password.
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await googleLogin();
+                  toast.success('Redirecting to Google sign in...');
+                } catch (error: any) {
+                  toast.error(error.message || 'Google sign in failed.');
+                }
+              }}
+              className="w-full mt-4 py-3 rounded-lg border border-cyan-500/30 text-slate-200 bg-slate-900 hover:bg-slate-800 transition-colors font-medium flex items-center justify-center gap-2"
+            >
+              <LogIn className="w-4 h-4" />
+              Continue with Google
+            </button>
 
             <button
               onClick={() => {

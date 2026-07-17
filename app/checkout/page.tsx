@@ -44,11 +44,46 @@ export default function CheckoutPage() {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const authUser = (await import('@/stores/authStore')).useAuthStore.getState().user;
+      if (!authUser) {
+        toast.error('Please sign in to place an order');
+        setLoading(false);
+        router.push('/');
+        return;
+      }
+
+      const payload = {
+        items: items.map(i => ({ id: i.id, quantity: i.quantity, price: i.price })),
+        total_amount: total,
+      };
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': authUser.id,
+          'x-user-email': authUser.email,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create order');
+      }
+
+      // clear cart
+      const clear = (await import('@/stores/cartStore')).useCartStore.getState().clearCart;
+      clear();
+
       toast.success('Order placed successfully!');
       router.push('/');
-    }, 2000);
+    } catch (err: any) {
+      toast.error(err.message || 'Order failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0) {

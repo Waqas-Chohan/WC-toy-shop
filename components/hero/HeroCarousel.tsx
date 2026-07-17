@@ -14,9 +14,13 @@ interface HeroSlide {
 }
 
 export function HeroCarousel() {
-  const { slides } = useProductStore();
+  const { slides, fetchSlides } = useProductStore();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
+
+  useEffect(() => {
+    fetchSlides();
+  }, [fetchSlides]);
 
   useEffect(() => {
     if (!autoPlay || !slides || slides.length === 0) return;

@@ -1,10 +1,19 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import React from 'react';
 import { SidebarProvider, useSidebar } from '@/components/providers/SidebarProvider';
 import { Sidebar } from './Sidebar';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith('/admin');
+
+  if (isAdminRoute) {
+    // Admin pages get a clean full-screen layout without the storefront sidebar
+    return <div className="min-h-screen">{children}</div>;
+  }
+
   return (
     <SidebarProvider>
       <MainLayoutInner>{children}</MainLayoutInner>

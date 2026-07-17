@@ -1,7 +1,8 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Menu, X, ShoppingCart, Heart, LogOut, User } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
@@ -17,7 +18,11 @@ export function Header() {
   const totalItems = useCartStore(state => state.getTotalItems());
   const toggleDrawer = useCartStore(state => state.toggleDrawer);
   const wishlistItems = useWishlistStore(state => state.items);
-  const { user, logout } = useAuthStore();
+  const { user, logout, syncSession } = useAuthStore();
+
+  useEffect(() => {
+    syncSession();
+  }, [syncSession]);
 
   return (
     <>
@@ -26,8 +31,14 @@ export function Header() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <span className="text-white font-bold text-lg">T</span>
+              <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg shadow-cyan-500/30 bg-slate-900">
+                <Image
+                  src="/logo.jpeg"
+                  alt="ToyShop Pro logo"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="font-bold text-xl bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent hidden sm:inline group-hover:to-purple-600 transition-all">
                 ToyShop Pro

@@ -223,14 +223,63 @@ export function ToysSection() {
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Image URL *</label>
-              <input
-                type="url"
-                placeholder="https://images.unsplash.com/..."
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg bg-secondary/50 border border-border text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                required
-              />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="url"
+                  placeholder="https://images.unsplash.com/..."
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-lg bg-secondary/50 border border-border text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                  required
+                />
+                <div className="relative shrink-0">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const authUser = (await import('@/stores/authStore')).useAuthStore.getState().user;
+                      if (!authUser) {
+                        toast.error("Please sign in first");
+                        return;
+                      }
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      formData.append('folder', 'products');
+                      
+                      const toastId = toast.loading('Uploading image...');
+                      try {
+                        const res = await fetch('/api/upload-image', {
+                          method: 'POST',
+                          headers: {
+                            'x-user-id': authUser.id,
+                            'x-user-email': authUser.email,
+                          },
+                          body: formData
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.url) {
+                          setImage(data.url);
+                          toast.success('Image uploaded successfully!', { id: toastId });
+                        } else {
+                          toast.error(data.error || 'Upload failed', { id: toastId });
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || 'Upload failed', { id: toastId });
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    className="w-full h-10 px-4 rounded-lg bg-secondary border border-border hover:bg-slate-800 text-sm text-slate-300 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+                  >
+                    <ImageIcon className="w-4 h-4 text-cyan-400" />
+                    Upload File
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2 md:col-span-2">
