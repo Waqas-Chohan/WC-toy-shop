@@ -6,10 +6,42 @@ __v0_jsx-dev-runtime.ts
 .v0-trash/
 .vercel/
 
-# Environment variables
+# Environment variables - CRITICAL!
 .env*.local
+.env                # ⚠️ ADD THIS - your actual .env file!
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Common ignores
-node_modules
+node_modules/
 .next/
 .DS_Store
+
+# Build outputs
+dist/
+build/
+out/
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
