@@ -97,6 +97,7 @@ export function SplashScreen() {
         position: 'absolute',
         left: 0,
         right: 0,
+        top: 0,
         height: '2px',
         background: 'linear-gradient(90deg, transparent, rgba(0,220,255,0.8), rgba(139,92,246,0.8), transparent)',
         animation: 'scanBeam 2.5s ease-in-out infinite',
@@ -264,18 +265,20 @@ export function SplashScreen() {
             height: '100%',
             background: 'linear-gradient(90deg, #00dcff, #8b5cf6)',
             borderRadius: '999px',
-            animation: 'loadBar 1.4s ease-out forwards',
+            transform: 'scaleX(0)',
+            transformOrigin: 'left',
+            animation: 'loadBar 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
             boxShadow: '0 0 8px #00dcff',
           }} />
         </div>
       </div>
-
+ 
       <style>{`
         @keyframes scanBeam {
-          0%   { top: -2px; opacity: 0; }
+          0%   { transform: translateY(-50vh); opacity: 0; }
           10%  { opacity: 1; }
           90%  { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
+          100% { transform: translateY(50vh); opacity: 0; }
         }
         @keyframes floatParticle {
           0%, 100% { transform: translateY(0px) scale(1); opacity: 0.7; }
@@ -292,8 +295,8 @@ export function SplashScreen() {
           50%       { opacity: 0; }
         }
         @keyframes loadBar {
-          from { width: 0%; }
-          to   { width: 100%; }
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
         }
         @keyframes gridPulse {
           0%, 100% { opacity: 0.6; }
