@@ -48,45 +48,40 @@ export function ReportsSection() {
     try {
       setLoading(true);
 
-      // 1. Fetch order items with products name
-      const { data: itemsData, error: itemsError } = await supabase
-        .from("order_items")
-        .select("quantity, price, product:product_id(name)");
-
-      // 2. Fetch orders to build monthly trend
       const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
-        .select("id, total_amount, created_at, status");
+        .select(`id, total_amount, status, created_at, order_items(quantity, price, product:product_id(name))`);
 
-      if (itemsError || ordersError) throw itemsError || ordersError;
+      if (ordersError) throw ordersError;
 
-      // --- AGGREGATE TOP PRODUCTS ---
       const productMap: Record<string, { quantity: number; revenue: number }> = {};
-      let totalQty = 0;
-      let totalRev = 0;
+      let totalQuantity = 0;
 
-      (itemsData || []).forEach((item: any) => {
-        const prodName = item.product?.name || "Deleted Product";
-        const qty = Number(item.quantity || 0);
-        const price = Number(item.price || 0);
-        const subtotal = qty * price;
+      (ordersData || []).forEach((order: any) => {
+        const isCancelled = order.status === "cancelled";
+        if (isCancelled) return;
 
-        totalQty += qty;
-        totalRev += subtotal;
+        const items = order.order_items || [];
+        items.forEach((item: any) => {
+          const prodName = item.product?.name || "Deleted Product";
+          const qty = Number(item.quantity || 0);
+          const price = Number(item.price || 0);
+          const subtotal = qty * price;
 
-        if (!productMap[prodName]) {
-          productMap[prodName] = { quantity: 0, revenue: 0 };
-        }
-        productMap[prodName].quantity += qty;
-        productMap[prodName].revenue += subtotal;
+          totalQuantity += qty;
+
+          if (!productMap[prodName]) {
+            productMap[prodName] = { quantity: 0, revenue: 0 };
+          }
+          productMap[prodName].quantity += qty;
+          productMap[prodName].revenue += subtotal;
+        });
       });
 
-      // Sort products by quantity ordered
       const sortedProducts = Object.entries(productMap)
         .map(([name, stats]) => ({ name, ...stats }))
         .sort((a, b) => b.quantity - a.quantity);
 
-      // Get top 4 products and group others
       const displayedProducts: TopProductItem[] = [];
       let otherQty = 0;
       let otherRev = 0;
@@ -116,38 +111,55 @@ export function ReportsSection() {
 
       setTopProducts(displayedProducts);
 
-      // --- AGGREGATE MONTHLY TREND ---
+      const validOrders = (ordersData || [])
+        .map((order: any) => ({
+          ...order,
+          created_at: order.created_at ? new Date(order.created_at) : null,
+        }))
+        .filter((order: any) => order.created_at instanceof Date && !Number.isNaN(order.created_at.getTime()));
+
+      const chartYear = validOrders.length
+        ? validOrders.reduce((latest: Date, order: any) =>
+            order.created_at > latest ? order.created_at : latest,
+          validOrders[0].created_at
+          ).getFullYear()
+        : new Date().getFullYear();
+
       const trendData: MonthlyTrendItem[] = MONTH_NAMES.map((month) => ({
         month,
         orders: 0,
         revenue: 0,
       }));
 
-      const activeOrders = ordersData || [];
-      activeOrders.forEach((order) => {
-        const d = new Date(order.created_at);
-        const monthIndex = d.getMonth();
+      let deliveredRevenue = 0;
+      let deliveredCount = 0;
+
+      validOrders.forEach((order: any) => {
+        if (order.created_at.getFullYear() !== chartYear) return;
+
+        const monthIndex = order.created_at.getMonth();
         if (monthIndex >= 0 && monthIndex < 12) {
           trendData[monthIndex].orders += 1;
           if (order.status === "delivered") {
-            trendData[monthIndex].revenue += Number(order.total_amount || 0);
+            const orderRevenue = Number(order.total_amount || 0);
+            trendData[monthIndex].revenue += orderRevenue;
+            deliveredRevenue += orderRevenue;
+            deliveredCount += 1;
           }
         }
       });
 
       setMonthlyTrend(trendData);
 
-      // --- AGGREGATE SUMMARY STATS ---
-      const orderCount = activeOrders.length;
-      const avgValue = orderCount ? totalRev / orderCount : 0;
+      const totalOrders = validOrders.length;
+      const avgValue = deliveredCount ? deliveredRevenue / deliveredCount : 0;
 
       setSummaryStats({
-        totalQuantity: totalQty,
-        totalRevenue: totalRev,
-        totalOrders: orderCount,
+        totalQuantity,
+        totalRevenue: deliveredRevenue,
+        totalOrders,
         avgOrderValue: avgValue,
       });
-
     } catch (e) {
       console.error("Failed to load reports summary data:", e);
     } finally {

@@ -12,6 +12,7 @@ import { AuthModal } from '@/components/auth/AuthModal';
 import { Sidebar } from './Sidebar';
 
 export function Header() {
+  const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -21,6 +22,7 @@ export function Header() {
   const { user, logout, syncSession } = useAuthStore();
 
   useEffect(() => {
+    setMounted(true);
     syncSession();
   }, [syncSession]);
 
@@ -67,7 +69,7 @@ export function Header() {
                 className="relative p-2.5 hover:bg-cyan-500/10 rounded-lg transition-colors duration-300 border border-transparent hover:border-cyan-500/30"
               >
                 <Heart className="w-5 h-5 text-slate-300 hover:text-cyan-400 transition-colors" />
-                {wishlistItems.length > 0 && (
+                {mounted && wishlistItems.length > 0 && (
                   <span className="absolute top-1 right-1 bg-red-500/80 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
                     {wishlistItems.length}
                   </span>
@@ -79,7 +81,7 @@ export function Header() {
                 className="relative p-2.5 hover:bg-cyan-500/10 rounded-lg transition-colors duration-300 border border-transparent hover:border-cyan-500/30"
               >
                 <ShoppingCart className="w-5 h-5 text-slate-300 hover:text-cyan-400 transition-colors" />
-                {totalItems > 0 && (
+                {mounted && totalItems > 0 && (
                   <span className="absolute top-1 right-1 bg-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
                     {totalItems}
                   </span>
@@ -87,7 +89,7 @@ export function Header() {
               </button>
 
               {/* Auth Section */}
-              {user ? (
+              {mounted && (user ? (
                 <div className="relative">
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
@@ -127,7 +129,7 @@ export function Header() {
                 >
                   Sign In
                 </button>
-              )}
+              ))}
 
               {/* Mobile Menu */}
               <button

@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS sliders (
 -- Users Table (extends auth)
 CREATE TABLE IF NOT EXISTS user_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  customer_number BIGSERIAL UNIQUE NOT NULL,
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   avatar_url TEXT,

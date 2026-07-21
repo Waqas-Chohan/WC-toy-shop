@@ -16,36 +16,56 @@ const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov
 
 export function RevenueChart() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [chartData, setChartData] = useState<MonthlyData[]>([]);
+  const [chartData, setChartData] = useState<MonthlyData[]>(
+    MONTHS.map((month) => ({ month, revenue: 0, orders: 0 }))
+  );
+  const [displayYear, setDisplayYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
     const fetchRevenue = async () => {
-      // Fetch all delivered orders from the current year
-      const year = new Date().getFullYear();
       const { data, error } = await supabase
         .from("orders")
-        .select("total_amount, status, created_at")
-        .gte("created_at", `${year}-01-01`)
-        .lte("created_at", `${year}-12-31`);
+        .select("total_amount, status, created_at");
 
       if (error || !data) {
-        // Fallback to empty chart
         setChartData(MONTHS.map((month) => ({ month, revenue: 0, orders: 0 })));
+        setDisplayYear(new Date().getFullYear());
         setIsLoaded(true);
         return;
       }
 
-      // Group delivered orders by month for revenue, all orders for count
-      const byMonth = MONTHS.map((month, idx) => {
-        const monthOrders = data.filter((o) => {
-          const d = new Date(o.created_at);
-          return d.getMonth() === idx;
-        });
-        const revenue = monthOrders
-          .filter((o) => o.status === "delivered")
-          .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+      const validOrders = (data || [])
+        .map((order) => ({
+          ...order,
+          created_at: order.created_at ? new Date(order.created_at) : null,
+        }))
+        .filter(
+          (order) =>
+            order.created_at instanceof Date &&
+            !Number.isNaN(order.created_at.getTime())
+        );
 
-        return { month, revenue, orders: monthOrders.length };
+      const currentYear = new Date().getFullYear();
+      const latestOrderDate = validOrders.reduce(
+        (latest: Date | null, order) =>
+          latest === null || order.created_at > latest ? order.created_at : latest,
+        null as Date | null
+      );
+      const year = latestOrderDate?.getFullYear() ?? currentYear;
+      setDisplayYear(year);
+
+      const byMonth = MONTHS.map((month) => ({ month, revenue: 0, orders: 0 }));
+
+      validOrders.forEach((order) => {
+        if (order.created_at.getFullYear() !== year) return;
+
+        const monthIndex = order.created_at.getMonth();
+        if (monthIndex >= 0 && monthIndex < 12) {
+          byMonth[monthIndex].orders += 1;
+          if (order.status === "delivered") {
+            byMonth[monthIndex].revenue += Number(order.total_amount || 0);
+          }
+        }
       });
 
       setChartData(byMonth);
@@ -54,7 +74,6 @@ export function RevenueChart() {
 
     fetchRevenue();
 
-    // Re-fetch when orders change
     const channel = supabase
       .channel("revenue-chart:orders")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, fetchRevenue)
@@ -68,7 +87,7 @@ export function RevenueChart() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-base font-semibold text-foreground">Revenue Trend</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">Monthly delivered revenue — {new Date().getFullYear()}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Monthly delivered revenue — {displayYear}</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
